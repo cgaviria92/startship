@@ -4,7 +4,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from sqlalchemy.sql.expression import false
-from crud import get_user_by_email,create_user_db,get_users,get_user,create_user_item,get_items,get_user_by_username
+from crud import get_user_by_email,create_user_db,get_users,get_user,create_user_item,get_items,get_user_by_username,get_info_all_users
 from models import Base
 from schemas import User,UserCreate,ItemCreate,Item,User_login
 from database import SessionLocal, engine
@@ -34,7 +34,9 @@ async def login(user: User_login, db: Session = Depends(get_db)):
     if login_resp==False or db_user == None :
         raise HTTPException(status_code=200, detail="usuario o contraseña errada")
     if login_resp==True:
-        return(JSONResponse(content=db_user.id)) 
+        info_all_user=get_info_all_users(db, user_id=db_user.id)
+        return(JSONResponse(info_all_user))
+        #return(JSONResponse(content=db_user.id)) 
 
 @app.post("/users/", response_model=User)
 async def create_user(user: UserCreate, db: Session = Depends(get_db)):

@@ -54,3 +54,18 @@ class User(UserBase):
 class User_login(BaseModel):
     username:str
     password: str
+
+class user_all_info_login(BaseModel):
+    id_user: int
+    locations_id= int
+    infousers_id = int
+    infousers_money  = int
+    infousers_exp  = int
+    infousers_hp_current  = int
+    ship_hp_update= int
+    ship_speed= int
+    ship_speed_update = int
+    ship_damage = int
+    ship_damage_update = int
+    ship_critical = int
+    ship_critical_update = int
