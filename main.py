@@ -1,92 +1,72 @@
-import datetime, uuid
-import model as mdUser
-from pg_db import database
-from fastapi import FastAPI
 from typing import List
+
+from fastapi import Depends, FastAPI, HTTPException
+from sqlalchemy.orm import Session
 from passlib.context import CryptContext
+from sqlalchemy.sql.expression import false
+from crud import get_user_by_email,create_user_db,get_users,get_user,create_user_item,get_items,get_user_by_username
+from models import Base
+from schemas import User,UserCreate,ItemCreate,Item,User_login
+from database import SessionLocal, engine
+from fastapi.responses import JSONResponse
+
+
+Base.metadata.create_all(bind=engine)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+app = FastAPI()
 
-app = FastAPI(
-    docs_url="/api/v2/docs",
-    redoc_url="/api/v2/redocs",
-    title="Core API",
-    description="New Framework of Python",
-    version="2.0",
-    openapi_url="/api/v2/openapi.json",
-    
-)
 
-# @app.on_event("startup")
-# async def startup():
-#     await database.connect()
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-# @app.on_event("shutdown")
-# async def shutdown():
-#     await database.disconnect()
+@app.post("/login/", response_model=User_login)
+async def login(user: User_login, db: Session = Depends(get_db)):
+    db_user = get_user_by_username(db, username=user.username)
+    login_resp = False
+    if db_user != None:
+        login_resp=pwd_context.verify(user.password,db_user.hashed_password)
+    if login_resp==False or db_user == None :
+        raise HTTPException(status_code=200, detail="usuario o contraseña errada")
+    if login_resp==True:
+        return(JSONResponse(content=db_user.id)) 
 
-# @app.get("/users", response_model=List[mdUser.UserList], tags=["Users"])
-# async def find_all_users():
-#     query = users.select()
-#     return await database.fetch_all(query)
+@app.post("/users/", response_model=User)
+async def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    db_user = get_user_by_username(db, username=user.username)
+    if db_user:
+        raise HTTPException(status_code=400, detail="User already registered")
+    user.password = pwd_context.hash(user.password)
+    return create_user_db(db=db, user=user)
 
-# @app.post("/users", response_model=mdUser.UserList, tags=["Users"])
-# async def register_user(user: mdUser.UserEntry):
-#     #gID   = str(uuid.uuid1())
-    
-#     gDate =str(datetime.datetime.now())
-#     query = users.insert().values(
-#         #id = gID,
-#         username   = user.username,
-#         password   = pwd_context.hash(user.password),
-#         email = user.email,
-#         last_name  = user.last_name,
-#         #gender     = user.gender,
-#         create_at  = gDate,
-#         status     = "1",
-#         money = user.money
-#     ) 
 
-#     await database.execute(query)
-#     return {
-#         #"id": gID,
-#         **user.dict(),
-#         "create_at":gDate,
-#         "status": "1"
-#     }
+@app.get("/users/", response_model=List[User])
+async def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    users = get_users(db, skip=skip, limit=limit)
+    return users
 
-# @app.get("/users/{userId}", response_model=mdUser.UserList, tags=["Users"])
-# async def find_user_by_id(userId: str):
-#     query = users.select().where(users.c.id == userId)
-#     return await database.fetch_one(query)
 
-# @app.put("/users", response_model=mdUser.UserList, tags=["Users"])
-# async def update_user(user: mdUser.UserUpdate):
-#     gDate = str(datetime.datetime.now())
-#     query = users.update().\
-#         where(users.c.id == user.id).\
-#         values(
-#             first_name = user.first_name,
-#             last_name  = user.last_name,
-#             gender     = user.gender,
-#             status     = user.status,
-#             create_at  = gDate,
-#         )
-#     await database.execute(query)
+@app.get("/users/{user_id}", response_model=User)
+async def read_user(user_id: int, db: Session = Depends(get_db)):
+    db_user = get_user(db, user_id=user_id)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
 
-#     return await find_user_by_id(user.id)
 
-# @app.delete("/users/{userId}", tags=["Users"])
-# async def delete_user(user: mdUser.UserDelete):
-#     query = users.delete().where(users.c.id == user.id)
-#     await database.execute(query)
+@app.post("/users/{user_id}/items/", response_model=Item)
+async def create_item_for_user(
+    user_id: int, item: ItemCreate, db: Session = Depends(get_db)
+):
+    return create_user_item(db=db, item=item, user_id=user_id)
 
-#     return {
-#         "status" : True,
-#         "message": "This user has been deleted successfully." 
-#     }
 
-@app.get("/courses", tags=["Courses"])
-def find_all_courses():
-    return "List all courses."
-    
+@app.get("/items/", response_model=List[Item])
+def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    items = get_items(db, skip=skip, limit=limit)
+    return items
