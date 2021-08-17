@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 #pruebas
 #SQLALCHEMY_DATABASE_URL = "postgresql://postgres:Micro2020@127.0.0.1:5432/startship"
 #pruduccion
-SQLALCHEMY_DATABASE_URL = "postgres://cetrwijkygzrya:462f033529889114d5f42adb57ea0eea8e755b755b808fc9e87e48848c3e631d@ec2-52-86-25-51.compute-1.amazonaws.com:5432/df2opdlv8197f7"
+SQLALCHEMY_DATABASE_URL = "postgres://ussgtiyqthumim:1e20dfdc0dd51fb8566a09b4b56af020abb80638813fdcb43485d94bc3ed40b6@ec2-34-234-12-149.compute-1.amazonaws.com:5432/d9qpd89l69b1is"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL
