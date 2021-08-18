@@ -48,7 +48,7 @@ async def login(user: User_login, db: Session = Depends(get_db)):
     if db_user != None:
         login_resp=pwd_context.verify(user.password,db_user.hashed_password)
     if login_resp==False or db_user == None :
-        raise HTTPException(status_code=200, detail="usuario o contraseña errada")
+        raise HTTPException(status_code=404, detail="usuario o contraseña errada")
     if login_resp==True:
         info_all_user=get_info_all_users(db, user_id=db_user.id)
         return(JSONResponse(info_all_user))
