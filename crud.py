@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 #from . import models, schemas
-from models import User,Item,locations,infousers,ship,bonus
+from models import User,Item,locations,infousers,ship,bonus,ship_update
 from schemas import UserCreate,ItemCreate
 
 def get_user(db: Session, user_id: int):
@@ -20,7 +20,7 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
 def get_info_all_users(db: Session, user_id: int):
     locations_user=db.query(locations).filter(User.id == user_id).first()
     infousers_user=db.query(infousers).filter(User.id == user_id).first()
-    ship_user=db.query(ship).filter(User.id == user_id).first()
+    ship_user=db.query(ship_update).filter(User.id == user_id).first()
     bonus_user=db.query(bonus).filter(User.id == user_id).first()
     return ({"user_id": user_id,
     "locations_id": locations_user.id,
@@ -32,14 +32,14 @@ def get_info_all_users(db: Session, user_id: int):
     "infousers_exp": infousers_user.exp,
     "infousers_hp_current": infousers_user.hp_current,
     "ship_id": ship_user.id,
-    "ship_hp": ship_user.hp,
+    #"ship_hp": ship_user.hp,
     "ship_update": ship_user.hp_update,
-    "ship_speed": ship_user.id,
+    #"ship_speed": ship_user.id,
     "ship_speed_update": ship_user.speed_update,
-    "ship_damage": ship_user.damage,
-    "ship_damage": ship_user.damage_update,
-    "ship_damage": ship_user.critical,
-    "ship_damage": ship_user.critical_update,
+    #"ship_damage": ship_user.damage,
+    "ship_damage_update": ship_user.damage_update,
+    #"ship_damage": ship_user.critical,
+    "ship_critical_update": ship_user.critical_update,
     "bonus_id": bonus_user.id
     })
 
@@ -54,6 +54,8 @@ def create_user_db(db: Session, user: UserCreate):
     db.add(db_infousers)
     db_ship = ship(user_id=db_user.id)
     db.add(db_ship)
+    dbship_update = ship_update(user_id=db_user.id)
+    db.add(dbship_update)
     db_bonus = bonus(user_id=db_user.id)
     db.add(db_bonus)
     db.commit()

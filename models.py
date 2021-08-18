@@ -40,22 +40,30 @@ class infousers(Base):
     money= Column(Integer, default=1000)
     exp= Column(Integer, default=0)
     #vida actual
-    hp_current = Column(Integer, default=1000)
+    hp_current = Column(Integer, default=100)
+    user_id = Column(Integer, ForeignKey('users.id'),unique=True,index=True)
+
+class ship_update(Base):
+    __tablename__= 'ship_update'
+    id= Column(Integer, primary_key=True)
+    # se suma estos dos para la vida maxima
+    #hp= Column(Integer,default=1000)
+    #vida extra que puede comprar el usuario
+    hp_update= Column(Integer,default=0)
+    #speed= Column(Integer,default=100)
+    speed_update = Column(Integer,default=0)
+    #damage = Column(Integer,default=100)
+    damage_update = Column(Integer,default=0)
+    #critical = Column(Integer,default=0)
+    critical_update = Column(Integer,default=0)
     user_id = Column(Integer, ForeignKey('users.id'),unique=True,index=True)
 
 class ship(Base):
     __tablename__= 'ship'
     id= Column(Integer, primary_key=True)
-    # se suma estos dos para la vida maxima
-    hp= Column(Integer,default=1000)
-    #vida extra que puede comprar el usuario
-    hp_update= Column(Integer,default=0)
-    speed= Column(Integer,default=100)
-    speed_update = Column(Integer,default=0)
-    damage = Column(Integer,default=100)
-    damage_update = Column(Integer,default=0)
-    critical = Column(Integer,default=0)
-    critical_update = Column(Integer,default=0)
+    useship= Column(Integer,default=1)
+    is_active = Column(Boolean, default=True)
+    
     user_id = Column(Integer, ForeignKey('users.id'),unique=True,index=True)
 
 class bonus(Base):
