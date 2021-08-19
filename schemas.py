@@ -69,6 +69,13 @@ def create_user(email, username, password):
 class User_login(BaseModel):
     username:str
     password: str
+    
+
+class User_register_post(BaseModel):
+    _id = ObjectId()
+    username:str
+    password: str
+    email : str
 
 class user_all_info_login(BaseModel):
     id_user: int

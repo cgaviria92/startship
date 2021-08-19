@@ -6,8 +6,8 @@ from passlib.context import CryptContext
 # from sqlalchemy.sql.expression import false
 # from crud import get_user_by_email,create_user_db,get_users,get_user,create_user_item,get_items,get_user_by_username,get_info_all_users
 # from models import Base
-# from schemas import User,UserCreate,ItemCreate,Item,User_login,
-from schemas import UserCreatetModel,User,create_user
+from schemas import User,UserCreate,ItemCreate,Item,User_login,User_register_post
+from schemas import create_user
 # from database import SessionLocal, engine
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -133,10 +133,10 @@ def index():
     return {"message": "Hello World"}
 
 # Signup endpoint with the POST method
-@app.post("/signup/{email}/{username}/{password}")
-def signup(email, username: str, password: str):
+@app.post("/signup/")
+def signup(User_new:User_register_post):
     user_exists = False
-    data = create_user(email, username, password)
+    data = create_user(User_new.email, User_new.username, User_new.password)
     insert_data(data)
     # Covert data to dict so it can be easily inserted to MongoDB
     #dict(data)
@@ -152,20 +152,20 @@ def signup(email, username: str, password: str):
     elif user_exists == False:
         db_sy.users.insert_one(data)
 
-        logeo=login(username=data['username'],password=data['password'])
+        logeo=login(User_new)
         my_json = json.loads(logeo.body)
         return JSONResponse(my_json)
 
 # Login endpoint
-@app.get("/login/{username}/{password}")
-def login(username, password):
+@app.post("/login",response_model=User_login)
+def login(User :User_login):
     def log_user_in(creds):
-        if creds['username'] == username and creds['password'] == password:
+        if creds['username'] == User.username and creds['password'] == User.password:
             return {"message": creds['username'] + ' successfully logged in'}
         else:
             return {"message":"Invalid credentials!!"}
     # Read email from database to validate if user exists and checks if password matches
-    logger = check_login_creds(username, password)
+    logger = check_login_creds(User.username, User.password)
     if bool(logger) != True:
         if logger == None:
             logger = "Invalid Email"
