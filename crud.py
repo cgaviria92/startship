@@ -2,7 +2,10 @@ from sqlalchemy.orm import Session
 
 #from . import models, schemas
 from models import User,Item,locations,infousers,ship,bonus,ship_update
-from schemas import UserCreate,ItemCreate
+from schemas import UserCreate,ItemCreate,StudentModel
+
+from fastapi.responses import JSONResponse
+
 
 def get_user(db: Session, user_id: int):
     return db.query(User).filter(User.id == user_id).first()
@@ -63,13 +66,14 @@ def create_user_db(db: Session, user: UserCreate):
     return db_user
 
 
-def get_items(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(Item).offset(skip).limit(limit).all()
+# def get_items(db: Session, skip: int = 0, limit: int = 100):
+#     return db.query(Item).offset(skip).limit(limit).all()
 
 
-def create_user_item(db: Session, item: ItemCreate, user_id: int):
-    db_item = Item(**item.dict(), owner_id=user_id)
-    db.add(db_item)
-    db.commit()
-    db.refresh(db_item)
-    return db_item
+# def create_user_item(db: Session, item: ItemCreate, user_id: int):
+#     db_item = Item(**item.dict(), owner_id=user_id)
+#     db.add(db_item)
+#     db.commit()
+#     db.refresh(db_item)
+#     return db_item
+
