@@ -1,28 +1,21 @@
-from typing import List
+#from typing import List
 
-from fastapi import Depends, FastAPI, HTTPException
-# from sqlalchemy.orm import Session
+from fastapi import FastAPI,Request
 from passlib.context import CryptContext
-# from sqlalchemy.sql.expression import false
-# from crud import get_user_by_email,create_user_db,get_users,get_user,create_user_item,get_items,get_user_by_username,get_info_all_users
-# from models import Base
-from schemas import User,UserCreate,ItemCreate,Item,User_login,User_register_post
-from schemas import create_user
+
+from schemas import User_login,User_register_post
+from schemas import create_user,userEntity,User_update
 # from database import SessionLocal, engine
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, Body, HTTPException, status
-from fastapi.encoders import jsonable_encoder
+from fastapi import FastAPI
 from database import client_asincrono,client_sincrono
-from fastapi.security import HTTPBasicCredentials
+
 import json 
-from typing import Optional
 
 from fastapi import FastAPI
 from bson import ObjectId
-from json import dumps
-from schematics.models import Model
-from schematics.types import StringType, EmailType
+
 
 # Base.metadata.create_all(bind=engine)
 
@@ -61,61 +54,49 @@ app.add_middleware(
 
 
 
-# Dependency
-# def get_db():
-#     db = SessionLocal()
-#     try:
-#         yield db
-#     finally:
-#         db.close()
 
-# @app.post("/login/", response_model=User_login)
-# async def login(user: User_login, db: Session = Depends(get_db)):
-#     db_user = get_user_by_username(db, username=user.username)
-#     login_resp = False
-#     if db_user != None:
-#         login_resp=pwd_context.verify(user.password,db_user.hashed_password)
-#     if login_resp==False or db_user == None :
-#         raise HTTPException(status_code=404, detail="usuario o contraseña errada")
-#     if login_resp==True:
-#         info_all_user=get_info_all_users(db, user_id=db_user.id)
-#         return(JSONResponse(info_all_user))
-#         #return(JSONResponse(content=db_user.id)) 
+@app.put("/users/{id}",  tags=["users"])
+async def update_user(id: str, user: User_update):
+    user_exc_none=user.dict(exclude_none=True)
+    b = db_sy.users.find_one({"_id": ObjectId(id)})
+    for variable_json in user_exc_none:
+        variable_json
+        # print(user_exc_none[variable_json])
+        # print(b[variable_json])
+        total =user_exc_none[variable_json]+ b[variable_json]
+        if variable_json == 'exp':
+            user_exc_none.update(exp=total)
+        if variable_json == 'money':
+            user_exc_none.update(money=total)
+        if variable_json == 'hp_current':
+            user_exc_none.update(hp_current=total)
+        if variable_json == 'bonus_repair_robot':
+            user_exc_none.update(bonus_repair_robot=total)
+        if variable_json == 'bonus_enhancer_critical':
+            user_exc_none.update(bonus_enhancer_critical=total)
+        if variable_json == 'bonus_enhancer_speed':
+            user_exc_none.update(bonus_enhancer_speed=total)
+        if variable_json == 'bonus_enhancer_shield':
+            user_exc_none.update(bonus_enhancer_shield=total)
+        if variable_json == 'update_hp':
+            user_exc_none.update(update_hp=total)
+        if variable_json == 'update_speed':
+            user_exc_none.update(update_speed=total)
+        if variable_json == 'update_damage':
+            user_exc_none.update(update_damage=total)
+        if variable_json == 'update_critical':
+            user_exc_none.update(update_critical=total)
+        else:
+            return"paila eso no existe"
+        #user_exc_none.update(variable_json=total)
+    db_sy.users.update({
+        "_id": ObjectId(id)
+    }, {
+        "$set": dict(user_exc_none)
+    })
+    x= db_sy.users.find_one({"_id": ObjectId(id)})
+    return userEntity(x)
 
-# @app.post("/users/", response_model=User)
-# async def create_user(user: UserCreate, db: Session = Depends(get_db)):
-#     db_user = get_user_by_username(db, username=user.username)
-#     if db_user:
-#         raise HTTPException(status_code=400, detail="User already registered")
-#     user.password = pwd_context.hash(user.password)
-#     return create_user_db(db=db, user=user)
-
-
-# @app.get("/users/", response_model=List[User])
-# async def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-#     users = get_users(db, skip=skip, limit=limit)
-#     return users
-
-
-# @app.get("/users/{user_id}", response_model=User)
-# async def read_user(user_id: int, db: Session = Depends(get_db)):
-#     db_user = get_user(db, user_id=user_id)
-#     if db_user is None:
-#         raise HTTPException(status_code=404, detail="User not found")
-#     return db_user
-
-
-# @app.post("/users/{user_id}/items/", response_model=Item)
-# async def create_item_for_user(
-#     user_id: int, item: ItemCreate, db: Session = Depends(get_db)
-# ):
-#     return create_user_item(db=db, item=item, user_id=user_id)
-
-
-# @app.get("/items/", response_model=List[Item])
-# def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-#     items = get_items(db, skip=skip, limit=limit)
-#     return items
 
 
 
@@ -138,10 +119,6 @@ def signup(User_new:User_register_post):
     user_exists = False
     data = create_user(User_new.email, User_new.username, User_new.password)
     insert_data(data)
-    # Covert data to dict so it can be easily inserted to MongoDB
-    #dict(data)
-
-    # Checks if an email exists from the collection of users
     if db_sy.users.find(
         {'username': data['username']}
         ).count() > 0:
