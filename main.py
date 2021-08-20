@@ -2,7 +2,6 @@
 
 from fastapi import FastAPI,Request
 from passlib.context import CryptContext
-
 from schemas import User_login,User_register_post
 from schemas import create_user,userEntity,User_update
 # from database import SessionLocal, engine
@@ -137,18 +136,19 @@ def signup(User_new:User_register_post):
 def login(User :User_login):
     def log_user_in(creds):
         if creds['username'] == User.username and creds['password'] == User.password:
-            return {"message": creds['username'] + ' successfully logged in'}
+            return JSONResponse(logger)
         else:
-            return {"message":"Invalid credentials!!"}
+            #return {"message":"Invalid credentials!!"}
+            #return ("status_code": "200",detail="Error raised)
+            return JSONResponse(status_code=404, content={"message": "Incorrect user or password"})
     # Read email from database to validate if user exists and checks if password matches
     logger = check_login_creds(User.username, User.password)
     if bool(logger) != True:
         if logger == None:
-            logger = "Invalid Email"
-            return {"message":logger}
+            return JSONResponse(status_code=404, content={"message": "Incorrect user or password"})
     else:
-        
-        return JSONResponse(logger)
+        status = log_user_in(logger)
+        return (status)
 
 
 def email_exists(username):
