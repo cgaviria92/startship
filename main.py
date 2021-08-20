@@ -60,7 +60,6 @@ async def update_user(id: str, user: User_update):
     user_exc_none=user.dict(exclude_none=True)
     b = db_sy.users.find_one({"_id": ObjectId(id)})
     for variable_json in user_exc_none:
-        variable_json
         # print(user_exc_none[variable_json])
         # print(b[variable_json])
         total =user_exc_none[variable_json]+ b[variable_json]
@@ -86,16 +85,16 @@ async def update_user(id: str, user: User_update):
             user_exc_none.update(update_damage=total)
         if variable_json == 'update_critical':
             user_exc_none.update(update_critical=total)
-        else:
-            return"paila eso no existe"
+        # else:
+        #     return"paila eso no existe"
         #user_exc_none.update(variable_json=total)
     db_sy.users.update({
         "_id": ObjectId(id)
     }, {
         "$set": dict(user_exc_none)
     })
-    x= db_sy.users.find_one({"_id": ObjectId(id)})
-    return userEntity(x)
+    info_user= db_sy.users.find_one({"_id": ObjectId(id)})
+    return userEntity(info_user)
 
 
 

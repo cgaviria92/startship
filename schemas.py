@@ -66,9 +66,19 @@ def create_user(email, username, password):
 def userEntity(item) -> dict:
     return {
         "id": str(item["_id"]),
-        "username": item["username"],
-        #"email": item["email"],
-        "password": item["password"]
+        "money": item["money"],
+        "exp": item["exp"],
+        "hp_current": item["hp_current"],
+        "ship_use": item["ship_use"],
+        "ship_active": item["ship_active"],
+        "bonus_repair_robot": item["bonus_repair_robot"],
+        "bonus_enhancer_speed": item["bonus_enhancer_speed"],
+        "bonus_enhancer_shield": item["bonus_enhancer_shield"],
+        "update_hp": item["update_hp"],
+        "update_speed": item["update_speed"],
+        "update_damage": item["update_damage"],
+        "update_critical": item["update_critical"]
+
     }
 
 
