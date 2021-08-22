@@ -54,7 +54,7 @@ app.add_middleware(
 
 
 
-@app.put("/users/{id}",  tags=["users"])
+@app.post("/users/{id}",  tags=["users"])
 async def update_user(id: str, user: User_update):
     user_exc_none=user.dict(exclude_none=True)
     b = db_sy.users.find_one({"_id": ObjectId(id)})
