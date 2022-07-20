@@ -151,6 +151,7 @@ def login(User :User_login):
         return (status)
 
 
+
 def email_exists(username):
     user_exist = True
     if db_sy.users.find(
