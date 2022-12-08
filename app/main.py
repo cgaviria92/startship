@@ -2,13 +2,13 @@
 
 from fastapi import FastAPI,Request
 from passlib.context import CryptContext
-from schemas import User_login,User_register_post
-from schemas import create_user,userEntity,User_update
+from .schemas import User_login,User_register_post
+from .schemas import create_user,userEntity,User_update
 # from database import SessionLocal, engine
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
-from database import client_asincrono,client_sincrono
+from .database import client_asincrono,client_sincrono
 
 import json 
 
@@ -24,7 +24,7 @@ from bson import ObjectId
 
 
 # funtion to create and assign values to the instanse of class User created
-
+app = FastAPI()
 
 
 
