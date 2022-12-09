@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 from .database import client_asincrono,client_sincrono
 
+
 import json 
 
 from fastapi import FastAPI
