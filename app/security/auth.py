@@ -23,13 +23,6 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-# async def get_db():
-#     db = SessionLocal()
-#     try:
-#         yield db
-#     finally:
-#         db.close()
-
 def authenticate_user(db, username: str, password: str):
     user = db.query(UserModel).filter(UserModel.username == username).first()
     if not user or not verify_password(password, user.hashed_password):
