@@ -1,192 +1,63 @@
-#from typing import List
-
-from fastapi import FastAPI,Request
+from datetime import datetime, timedelta
+from typing import Optional
+from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+import jwt
+from pydantic import BaseModel
 from passlib.context import CryptContext
-from .schemas import User_login,User_register_post
-from .schemas import create_user,userEntity,User_update
-# from database import SessionLocal, engine
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI
-from .database import client_asincrono,client_sincrono
+from app.database.database import SessionLocal, engine, Base
+from sqlalchemy.orm import Session
+from app.models.user import User, UserCreate 
+from app.models.models import UserModel # Importamos UserCreate desde models
+from app.security.auth import get_password_hash, verify_password, authenticate_user, create_access_token, get_db,ACCESS_TOKEN_EXPIRE_MINUTES
 
 
-import json 
+# Crear todas las tablas en la base de datos
+Base.metadata.create_all(bind=engine)
 
-from fastapi import FastAPI
-from bson import ObjectId
-
-
-# Base.metadata.create_all(bind=engine)
-
-
-
-# An instance of class User
-
-
-# funtion to create and assign values to the instanse of class User created
+# Configuración de la aplicación FastAPI
 app = FastAPI()
 
+# Endpoint para crear un usuario
+@app.post("/users/", response_model=User)
+async def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    hashed_password = get_password_hash(user.password)
+    user_obj = UserModel(username=user.username, hashed_password=hashed_password)
+    db.add(user_obj)
+    db.commit()
+    db.refresh(user_obj)
+    return user_obj
 
 
 
+# Endpoint para obtener información de un usuario por su ID
+@app.get("/users/{user_id}", response_model=User)
+async def read_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(UserModel).filter(UserModel.id == user_id).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
 
+# Endpoint para obtener información de un usuario por su nombre de usuario
+@app.get("/users/", response_model=User)
+async def read_user_by_username(username: str, db: Session = Depends(get_db)):
+    user = db.query(UserModel).filter(UserModel.username == username).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-app = FastAPI()
-#db = client.test
-db_sy = client_sincrono['usersdata']
-db_asy = client_asincrono['usersdata']
-
-#app.router.redirect_slashes = False
-
-origins = [
-    "*",
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-
-
-@app.post("/users/{id}",  tags=["users"])
-async def update_user(id: str, user: User_update):
-    user_exc_none=user.dict(exclude_none=True)
-    b = db_sy.users.find_one({"_id": ObjectId(id)})
-    for variable_json in user_exc_none:
-        # print(user_exc_none[variable_json])
-        # print(b[variable_json])
-        total =user_exc_none[variable_json]+ b[variable_json]
-        if variable_json == 'exp':
-            user_exc_none.update(exp=total)
-        if variable_json == 'money':
-            user_exc_none.update(money=total)
-        if variable_json == 'hp_current':
-            user_exc_none.update(hp_current=total)
-        if variable_json == 'bonus_repair_robot':
-            user_exc_none.update(bonus_repair_robot=total)
-        if variable_json == 'bonus_enhancer_critical':
-            user_exc_none.update(bonus_enhancer_critical=total)
-        if variable_json == 'bonus_enhancer_speed':
-            user_exc_none.update(bonus_enhancer_speed=total)
-        if variable_json == 'bonus_enhancer_shield':
-            user_exc_none.update(bonus_enhancer_shield=total)
-        if variable_json == 'update_hp':
-            user_exc_none.update(update_hp=total)
-        if variable_json == 'update_speed':
-            user_exc_none.update(update_speed=total)
-        if variable_json == 'update_damage':
-            user_exc_none.update(update_damage=total)
-        if variable_json == 'update_critical':
-            user_exc_none.update(update_critical=total)
-        # else:
-        #     return"paila eso no existe"
-        #user_exc_none.update(variable_json=total)
-    db_sy.users.update({
-        "_id": ObjectId(id)
-    }, {
-        "$set": dict(user_exc_none)
-    })
-    info_user= db_sy.users.find_one({"_id": ObjectId(id)})
-    return userEntity(info_user)
-
-
-
-
-
-
-
-
-
-
-
-##login no tocar
-# Our root endpoint
-@app.get("/")
-def index():
-    return {"message": "Hello World"}
-
-# Signup endpoint with the POST method
-@app.post("/signup/")
-def signup(User_new:User_register_post):
-    user_exists = False
-    data = create_user(User_new.email, User_new.username, User_new.password)
-    insert_data(data)
-    if db_sy.users.find(
-        {'username': data['username']}
-        ).count() > 0:
-        user_exists = True
-        print("USer Exists")
-        return {"message":"User Exists"}
-    # If the email doesn't exist, create the user
-    elif user_exists == False:
-        db_sy.users.insert_one(data)
-
-        logeo=login(User_new)
-        my_json = json.loads(logeo.body)
-        return JSONResponse(my_json)
-
-# Login endpoint
-@app.post("/login",response_model=User_login)
-def login(User :User_login):
-    def log_user_in(creds):
-        if creds['username'] == User.username and creds['password'] == User.password:
-            return JSONResponse(logger)
-        else:
-            #return {"message":"Invalid credentials!!"}
-            #return ("status_code": "200",detail="Error raised)
-            return JSONResponse(status_code=404, content={"message": "Incorrect user or password"})
-    # Read email from database to validate if user exists and checks if password matches
-    logger = check_login_creds(User.username, User.password)
-    if bool(logger) != True:
-        if logger == None:
-            return JSONResponse(status_code=404, content={"message": "Incorrect user or password"})
-    else:
-        status = log_user_in(logger)
-        return (status)
-
-
-
-def email_exists(username):
-    user_exist = True
-    if db_sy.users.find(
-        {'username': username}
-    ).count() == 0:
-        user_exist = False
-        return user_exist
-
-def check_login_creds(username, password):
-    if not email_exists(username):
-        activeuser = db_sy.users.find(
-            {'username': username}
+# Endpoint para autenticar usuarios y obtener token de acceso
+@app.post("/token")
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = authenticate_user(db, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
         )
-        for actuser in activeuser:
-            actuser = dict(actuser)
-            actuser['_id'] = str(actuser['_id'])    
-            return actuser
-
-def insert_data(data):
-    data['user_active']=True
-    data['location_x']=10
-    data['location_y']=10
-    data['location_map']=1
-    data['money']=1000
-    data['exp']=0
-    data['hp_current']=100
-    data['ship_use']=1
-    data['ship_active']=True
-    data['bonus_repair_robot']=100
-    data['bonus_enhancer_critical']=0
-    data['bonus_enhancer_speed']=0
-    data['bonus_enhancer_shield']=0
-    data['update_hp']=0
-    data['update_speed']=0
-    data['update_damage']=0
-    data['update_critical']=0
-    return data
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
